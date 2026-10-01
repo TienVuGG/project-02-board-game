@@ -1,0 +1,61 @@
+{
+  "board_convention": "6 rows x 7 columns; row 0 is the TOP row, row 5 is the BOTTOM row (gravity fills bottom-up). Each row is a 7-character string using '.', 'X', 'O'. Load with game_engine.board_from_rows(rows).",
+  "states": [
+    {
+      "id": "B1_open_start",
+      "class": "normal",
+      "board": [
+        ".......",
+        ".......",
+        ".......",
+        ".......",
+        ".......",
+        "......."
+      ],
+      "to_move": "X",
+      "description": "Standard empty opening board. Use for the Human vs easy-AI and Human vs stronger-AI demos by changing only the AI's search depth (and, once implemented, comparing minimax vs alphabeta)."
+    },
+    {
+      "id": "B2_depth_sensitive_block",
+      "class": "difficult",
+      "board": [
+        ".......",
+        ".......",
+        ".......",
+        ".......",
+        "X......",
+        "OOO.XX."
+      ],
+      "to_move": "X",
+      "description": "O has three in a row at row 5, columns 0-2, and threatens an immediate win by playing column 3. X has two in a row at row 5, columns 4-5 (not yet urgent). A shallow/greedy agent that only scores the current position may miss the threat and develop its own line (for example column 6) instead of blocking; an agent that looks at least one opponent reply ahead must block at column 3. Use this state to show that different search depths choose different moves."
+    },
+    {
+      "id": "B3_alphabeta_reduction",
+      "class": "extra",
+      "board": [
+        ".......",
+        ".......",
+        ".......",
+        "....X..",
+        "...XO..",
+        "..XOXO."
+      ],
+      "to_move": "O",
+      "description": "Midgame position with all seven columns still open and no immediate win, giving a large branching factor. Use this state to compare the number of nodes expanded by plain Minimax versus Minimax with Alpha-Beta pruning at the same depth (the required alpha-beta node-reduction demo)."
+    },
+    {
+      "id": "B4_full_column_failure",
+      "class": "failure",
+      "board": [
+        "...X...",
+        "...O...",
+        "...X...",
+        "...O...",
+        "...X...",
+        "...O..."
+      ],
+      "to_move": "X",
+      "description": "Column 3 is completely full (alternating X/O, no winner). legal_moves(board) must exclude column 3, and apply_move(board, 3, player) must raise ValueError instead of crashing or silently corrupting the board. This is the engine-level failure/edge-case demo."
+    }
+  ]
+}
