@@ -1,0 +1,5 @@
+game,first_agent,second_agent,x_agent,o_agent,winner,winner_agent,first_agent_result,turns,first_moves,first_nodes,first_time_ms,second_moves,second_nodes,second_time_ms
+1,random,minimax:1,random,minimax:1,O,minimax:1,loss,8,4,0,0.011300000551273115,4,32,2.6504000006752904
+2,random,minimax:1,minimax:1,random,X,minimax:1,loss,7,3,0,0.009399998816661537,4,32,2.578600000560982
+3,random,minimax:1,random,minimax:1,O,minimax:1,loss,10,5,0,0.009899998985929415,5,40,3.0870999999024207
+4,random,minimax:1,minimax:1,random,X,minimax:1,loss,7,3,0,0.004599999556376133,4,32,2.3956000004545785
