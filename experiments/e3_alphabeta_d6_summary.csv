@@ -1,0 +1,2 @@
+first_agent,second_agent,games,wins,draws,losses,win_rate,draw_rate,loss_rate,avg_turns,avg_first_nodes_per_move,avg_second_nodes_per_move,avg_first_time_ms_per_move,avg_second_time_ms_per_move
+alphabeta:6,alphabeta:6,50,25,0,25,0.5,0.0,0.5,35.0,7063.142857142857,7063.142857142857,642.0393620571422,639.0973453714086

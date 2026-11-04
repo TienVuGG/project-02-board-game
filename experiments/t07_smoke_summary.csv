@@ -1,0 +1,2 @@
+first_agent,second_agent,games,wins,draws,losses,win_rate,draw_rate,loss_rate,avg_turns,avg_first_nodes_per_move,avg_second_nodes_per_move,avg_first_time_ms_per_move,avg_second_time_ms_per_move
+random,minimax:1,4,0,0,4,0.0,0.0,1.0,8.0,0.0,8.0,0.0023466665273493468,0.6301000000937219

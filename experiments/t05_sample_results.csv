@@ -1,0 +1,7 @@
+algorithm,depth,player,best_column,value,nodes_expanded,elapsed_ms
+minimax,2,O,3,-30.0,57,5.7420000002821325
+alphabeta,2,O,3,-30.0,32,2.6259000005666167
+minimax,3,O,3,0.0,400,48.50330000044778
+alphabeta,3,O,3,0.0,248,23.298699999941164
+minimax,4,O,3,-97.0,2800,270.13590000024124
+alphabeta,4,O,3,-97.0,761,66.56930000008288
