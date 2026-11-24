@@ -27,6 +27,20 @@ PLAYER_O = "O"
 Board = Tuple[Tuple[str, ...], ...]
 
 
+def set_board_config(rows: int, columns: int, connect: int) -> None:
+    """Configure board dimensions for custom matches."""
+    global ROWS, COLUMNS, CONNECT
+    if not 7 <= columns <= 9:
+        raise ValueError("columns must be in range 7..9")
+    if not 6 <= rows <= 8:
+        raise ValueError("rows must be in range 6..8")
+    if not 4 <= connect <= 6:
+        raise ValueError("connect must be in range 4..6")
+    ROWS = rows
+    COLUMNS = columns
+    CONNECT = connect
+
+
 def new_board() -> Board:
     """Return an empty ROWS x COLUMNS board."""
     return tuple(tuple(EMPTY for _ in range(COLUMNS)) for _ in range(ROWS))
@@ -40,11 +54,13 @@ def other_player(player: str) -> str:
 
 def legal_moves(board: Board) -> List[int]:
     """Return the list of column indices that are not full, left to right."""
-    return [col for col in range(COLUMNS) if board[0][col] == EMPTY]
+    columns = len(board[0]) if board else COLUMNS
+    return [col for col in range(columns) if board[0][col] == EMPTY]
 
 
 def _landing_row(board: Board, column: int) -> Optional[int]:
-    for row in range(ROWS - 1, -1, -1):
+    rows = len(board)
+    for row in range(rows - 1, -1, -1):
         if board[row][column] == EMPTY:
             return row
     return None
@@ -57,8 +73,9 @@ def apply_move(board: Board, column: int, player: str) -> Board:
     """
     if player not in (PLAYER_X, PLAYER_O):
         raise ValueError(f"Unknown player token: {player!r}")
-    if column < 0 or column >= COLUMNS:
-        raise ValueError(f"Column {column} is out of range 0..{COLUMNS - 1}")
+    columns = len(board[0]) if board else COLUMNS
+    if column < 0 or column >= columns:
+        raise ValueError(f"Column {column} is out of range 0..{columns - 1}")
     row = _landing_row(board, column)
     if row is None:
         raise ValueError(f"Column {column} is full")
@@ -68,12 +85,14 @@ def apply_move(board: Board, column: int, player: str) -> Board:
 
 
 def _winning_line(board: Board, row: int, col: int, player: str) -> bool:
+    rows = len(board)
+    columns = len(board[0]) if board else COLUMNS
     directions = [(0, 1), (1, 0), (1, 1), (1, -1)]
     for d_row, d_col in directions:
         count = 1
         for sign in (1, -1):
             r, c = row + d_row * sign, col + d_col * sign
-            while 0 <= r < ROWS and 0 <= c < COLUMNS and board[r][c] == player:
+            while 0 <= r < rows and 0 <= c < columns and board[r][c] == player:
                 count += 1
                 r += d_row * sign
                 c += d_col * sign
@@ -84,8 +103,10 @@ def _winning_line(board: Board, row: int, col: int, player: str) -> bool:
 
 def check_winner(board: Board) -> Optional[str]:
     """Return `PLAYER_X` or `PLAYER_O` if that player has 4 in a row, else `None`."""
-    for row in range(ROWS):
-        for col in range(COLUMNS):
+    rows = len(board)
+    columns = len(board[0]) if board else COLUMNS
+    for row in range(rows):
+        for col in range(columns):
             player = board[row][col]
             if player == EMPTY:
                 continue

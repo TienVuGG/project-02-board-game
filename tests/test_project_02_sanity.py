@@ -1,8 +1,8 @@
 """Sanity tests for Project 02 (AI Board Game Arena — Connect Four).
 
 These tests check the game engine (including win detection), the random
-baseline agent, and that the starter does NOT ship a working Minimax /
-Alpha-Beta core. They do not grade the student's AI. None of this file
+baseline agent, and the public AI-core contracts. They do not grade the
+student's heuristic quality. None of this file
 imports pygame: game_engine.py, random_agent.py, and student_core.py must
 be importable without it.
 """
@@ -252,14 +252,19 @@ def test_random_agent_raises_when_no_moves():
 # ---------------------------------------------------------------------------
 
 
-def test_student_core_stubs_raise_not_implemented():
+def test_student_core_returns_legal_search_results():
     board = ge.new_board()
-    with pytest.raises(NotImplementedError):
-        student_core.evaluate(board, ge.PLAYER_X)
-    with pytest.raises(NotImplementedError):
-        student_core.minimax(board, ge.PLAYER_X, depth=2, maximizing_player=ge.PLAYER_X)
-    with pytest.raises(NotImplementedError):
-        student_core.alphabeta(board, ge.PLAYER_X, depth=2, maximizing_player=ge.PLAYER_X)
+    assert isinstance(student_core.evaluate(board, ge.PLAYER_X), (int, float))
+    minimax_move, minimax_value = student_core.minimax(
+        board, ge.PLAYER_X, depth=2, maximizing_player=ge.PLAYER_X
+    )
+    alphabeta_move, alphabeta_value = student_core.alphabeta(
+        board, ge.PLAYER_X, depth=2, maximizing_player=ge.PLAYER_X
+    )
+    assert minimax_move in ge.legal_moves(board)
+    assert alphabeta_move in ge.legal_moves(board)
+    assert isinstance(minimax_value, (int, float))
+    assert isinstance(alphabeta_value, (int, float))
 
 
 def test_game_engine_module_has_no_ai_core_functions():

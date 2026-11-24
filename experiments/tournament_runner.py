@@ -1,9 +1,9 @@
 """Run reproducible Connect Four agent tournaments.
 
 Examples:
-    python experiments/tournament_runner.py --first random --second minimax:2 --games 50
-    python experiments/tournament_runner.py --first minimax:3 --second alphabeta:3 --games 50
-    python experiments/tournament_runner.py --first alphabeta:2 --second alphabeta:2 --games 50
+    python experiments/tournament_runner.py --first random --second minimax:2 --games 100
+    python experiments/tournament_runner.py --first minimax:3 --second alphabeta:3 --games 100
+    python experiments/tournament_runner.py --first alphabeta:2 --second alphabeta:2 --games 100
 """
 from __future__ import annotations
 
@@ -124,6 +124,14 @@ def play_game(
         or (not first_is_x and winner == ge.PLAYER_O)
     )
     first_result = "draw" if winner is None else ("win" if first_won else "loss")
+    first_mover = "X" if first_is_x else "O"
+    second_mover = "O" if first_is_x else "X"
+    first_mover_result = first_result
+    second_mover_result = (
+        "draw"
+        if winner is None
+        else ("loss" if first_won else "win")
+    )
     first_stats = stats["X"] if first_is_x else stats["O"]
     second_stats = stats["O"] if first_is_x else stats["X"]
     return {
@@ -135,6 +143,10 @@ def play_game(
         "winner": winner or "draw",
         "winner_agent": winner_agent or "draw",
         "first_agent_result": first_result,
+        "first_mover": first_mover,
+        "second_mover": second_mover,
+        "first_mover_result": first_mover_result,
+        "second_mover_result": second_mover_result,
         "turns": turns,
         "first_moves": first_stats.moves,
         "first_nodes": first_stats.nodes,
@@ -161,6 +173,12 @@ def run_tournament(
     wins = sum(record["first_agent_result"] == "win" for record in records)
     losses = sum(record["first_agent_result"] == "loss" for record in records)
     draws = games - wins - losses
+    first_mover_wins = sum(
+        record["first_mover_result"] == "win" for record in records
+    )
+    second_mover_wins = sum(
+        record["second_mover_result"] == "win" for record in records
+    )
     summary = {
         "first_agent": first_agent.name,
         "second_agent": second_agent.name,
@@ -168,6 +186,10 @@ def run_tournament(
         "wins": wins,
         "draws": draws,
         "losses": losses,
+        "first_agent_wins": wins,
+        "second_agent_wins": losses,
+        "first_mover_wins": first_mover_wins,
+        "second_mover_wins": second_mover_wins,
         "win_rate": wins / games,
         "draw_rate": draws / games,
         "loss_rate": losses / games,
@@ -206,7 +228,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--first", required=True, help="random, minimax:N, or alphabeta:N")
     parser.add_argument("--second", required=True, help="random, minimax:N, or alphabeta:N")
-    parser.add_argument("--games", type=int, default=50)
+    parser.add_argument("--games", type=int, default=100)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument(
         "--output",

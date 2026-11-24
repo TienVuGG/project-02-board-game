@@ -82,6 +82,41 @@ def test_search_blocks_immediate_opponent_threat():
     assert alphabeta_move == 3
 
 
+def test_alpha_beta_searches_only_the_forced_block():
+    state = board(
+        ".......",
+        ".......",
+        ".......",
+        ".......",
+        "X......",
+        "OOO.XX.",
+    )
+    core.reset_node_counters()
+    move, _ = core.alphabeta(state, ge.PLAYER_X, depth=1, maximizing_player=ge.PLAYER_X)
+    _, nodes = core.get_node_counters()
+
+    assert move == 3
+    assert nodes == 2
+
+
+def test_alpha_beta_recognizes_unavoidable_double_threat():
+    state = board(
+        ".......",
+        ".......",
+        ".......",
+        "O.....O",
+        "O.....O",
+        "O.....O",
+    )
+    core.reset_node_counters()
+    move, value = core.alphabeta(state, ge.PLAYER_X, depth=5, maximizing_player=ge.PLAYER_X)
+    _, nodes = core.get_node_counters()
+
+    assert move in ge.legal_moves(state)
+    assert value == -core.WIN_SCORE
+    assert nodes == 1
+
+
 def test_terminal_board_returns_sentinel_column():
     state = board(
         ".......",

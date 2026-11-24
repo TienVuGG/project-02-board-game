@@ -35,6 +35,15 @@ CENTER_SCORE = 3.0
 
 _minimax_nodes_expanded = 0
 _alphabeta_nodes_expanded = 0
+_alphabeta_cache: dict[tuple[Board, str, int, str], tuple[int, float]] = {}
+
+
+def set_ai_board_config(rows: int, columns: int, connect: int) -> None:
+    """Configure AI dimensions and win window for custom boards."""
+    global ROWS, COLUMNS, CONNECT
+    ROWS = rows
+    COLUMNS = columns
+    CONNECT = connect
 
 
 def _validate_player(player: str) -> None:
@@ -59,13 +68,13 @@ def _score_window(window: tuple[str, ...], player: str) -> float:
         return WIN_SCORE
     if opponent_count == CONNECT:
         return -WIN_SCORE
-    if player_count == 3 and empty_count == 1:
+    if player_count == CONNECT - 1 and empty_count == 1:
         return THREE_SCORE
-    if player_count == 2 and empty_count == 2:
+    if player_count == CONNECT - 2 and empty_count >= 2:
         return TWO_SCORE
-    if opponent_count == 3 and empty_count == 1:
+    if opponent_count == CONNECT - 1 and empty_count == 1:
         return -THREE_SCORE
-    if opponent_count == 2 and empty_count == 2:
+    if opponent_count == CONNECT - 2 and empty_count >= 2:
         return -TWO_SCORE
     return 0.0
 
@@ -95,9 +104,45 @@ def _iter_windows(board: Board):
 
 def reset_node_counters() -> None:
     """Reset search-node counters before a benchmarked root call."""
-    global _minimax_nodes_expanded, _alphabeta_nodes_expanded
+    global _minimax_nodes_expanded, _alphabeta_nodes_expanded, _alphabeta_cache
     _minimax_nodes_expanded = 0
     _alphabeta_nodes_expanded = 0
+    _alphabeta_cache = {}
+
+
+def _ordered_moves(moves: list[int]) -> list[int]:
+    """Search central columns first to improve Alpha-Beta cutoffs."""
+    center = COLUMNS // 2
+    return sorted(moves, key=lambda column: abs(column - center))
+
+
+def _wins_on_drop(board: Board, column: int, player: str) -> bool:
+    row = len(board) - 1
+    while row >= 0 and board[row][column] != EMPTY:
+        row -= 1
+    if row < 0:
+        return False
+
+    for row_step, column_step in ((0, 1), (1, 0), (1, 1), (1, -1)):
+        count = 1
+        for direction in (-1, 1):
+            current_row = row + row_step * direction
+            current_column = column + column_step * direction
+            while (
+                0 <= current_row < len(board)
+                and 0 <= current_column < len(board[0])
+                and board[current_row][current_column] == player
+            ):
+                count += 1
+                current_row += row_step * direction
+                current_column += column_step * direction
+        if count >= CONNECT:
+            return True
+    return False
+
+
+def _winning_moves(board: Board, player: str, moves: list[int]) -> list[int]:
+    return [column for column in moves if _wins_on_drop(board, column, player)]
 
 
 def get_node_counters() -> tuple[int, int]:
@@ -210,6 +255,10 @@ def alphabeta(
     if depth < 0:
         raise ValueError("depth must be non-negative")
 
+    cached = _alphabeta_cache.get((board, player, depth, maximizing_player))
+    if cached is not None:
+        return cached
+
     moves = legal_moves(board)
     if is_terminal(board) or not moves:
         return -1, evaluate(board, maximizing_player)
@@ -217,12 +266,37 @@ def alphabeta(
     if depth == 0:
         return moves[0], evaluate(board, maximizing_player)
 
+    winning_moves = _winning_moves(board, player, moves)
+    if winning_moves:
+        value = WIN_SCORE if player == maximizing_player else -WIN_SCORE
+        return _ordered_moves(winning_moves)[0], value
+
+    opponent = other_player(player)
+    opponent_wins = _winning_moves(board, opponent, moves)
+    if len(opponent_wins) > 1:
+        value = -WIN_SCORE if player == maximizing_player else WIN_SCORE
+        return _ordered_moves(moves)[0], value
+    if opponent_wins:
+        moves = [opponent_wins[0]]
+
+    if depth == 1:
+        safe_moves = []
+        for column in moves:
+            child = apply_move(board, column, player)
+            if not _winning_moves(child, opponent, legal_moves(child)):
+                safe_moves.append(column)
+        if not safe_moves:
+            value = -WIN_SCORE if player == maximizing_player else WIN_SCORE
+            return _ordered_moves(moves)[0], value
+        moves = safe_moves
+
     is_maximizing = player == maximizing_player
     best_column = moves[0]
 
     if is_maximizing:
         best_value = float("-inf")
-        for column in moves:
+        cutoff = False
+        for column in _ordered_moves(moves):
             child = apply_move(board, column, player)
             _, child_value = alphabeta(
                 child,
@@ -237,10 +311,12 @@ def alphabeta(
                 best_column = column
             alpha = max(alpha, best_value)
             if alpha >= beta:
+                cutoff = True
                 break
     else:
         best_value = float("inf")
-        for column in moves:
+        cutoff = False
+        for column in _ordered_moves(moves):
             child = apply_move(board, column, player)
             _, child_value = alphabeta(
                 child,
@@ -255,6 +331,9 @@ def alphabeta(
                 best_column = column
             beta = min(beta, best_value)
             if alpha >= beta:
+                cutoff = True
                 break
 
+    if not cutoff:
+        _alphabeta_cache[(board, player, depth, maximizing_player)] = (best_column, best_value)
     return best_column, best_value
